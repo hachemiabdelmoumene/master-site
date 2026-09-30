@@ -1,0 +1,112 @@
+from django.core.management.base import BaseCommand
+from apps.specialties.models import Specialty, Module
+from apps.resources.models import Resource
+
+
+class Command(BaseCommand):
+    help = "Initialise les 7 spécialités, les modules et les ressources approuvées / en attente"
+
+    def handle(self, *args, **options):
+        specialties_data = [
+            ("SSI", "Sécurité des Systèmes Informatiques", "ssi", "#10b981", "ShieldAlert", [
+                ("CRYPTO", "Cryptographie Avancée", "S1"),
+                ("SECNET", "Sécurité des Réseaux et Protocoles", "S1"),
+                ("MALWARE", "Analyse de Malwares & Rétro-ingénierie", "S2"),
+            ]),
+            ("SII", "Systèmes d'Information Intelligents", "sii", "#8b5cf6", "BrainCircuit", [
+                ("ML_ADV", "Apprentissage Automatique Avancé", "S1"),
+                ("NLP", "Traitement Automatique du Langage Naturel", "S2"),
+            ]),
+            ("IL", "Ingénierie du Logiciel", "il", "#f59e0b", "Code2", [
+                ("ARCHI", "Architectures Logicielles et Design Patterns", "S1"),
+                ("DEVOPS", "DevOps, CI/CD et Conteneurisation", "S1"),
+            ]),
+            ("M1 HPC", "High Performance Computing", "m1-hpc", "#f43f5e", "Cpu", [
+                ("PARAL", "Calcul Parallèle et Distribué", "S1"),
+                ("CUDA", "Programmation GPU & Accélération CUDA", "S1"),
+            ]),
+            ("BIGDATA", "Big Data et Analytics", "bigdata", "#0ea5e9", "Database", [
+                ("SPARK", "Traitement Distribué avec Apache Spark", "S1"),
+                ("STREAM", "Streaming de Données Temps Réel (Kafka)", "S2"),
+            ]),
+            ("BIOINFO", "Bioinformatique", "bioinfo", "#14b8a6", "Dna", [
+                ("GENOM", "Algorithmique du Séquençage Génomique", "S1"),
+                ("STRUCT", "Bioinformatique Structurale et Protéines", "S2"),
+            ]),
+            ("RSD", "Réseaux et Systèmes Distribués", "rsd", "#d946ef", "Network", [
+                ("PROTOC", "Protocoles Réseaux Avancés & SDN", "S1"),
+                ("DISTRIB", "Systèmes et Algorithmes Distribués", "S1"),
+            ]),
+        ]
+
+        Resource.objects.all().delete()
+
+        for idx, (code, name, slug, color, icon, modules) in enumerate(specialties_data, start=1):
+            spec, _ = Specialty.objects.update_or_create(
+                code=code,
+                defaults={
+                    "name": name, "slug": slug, "accent_color": color,
+                    "icon_name": icon, "order": idx, "description": f"Master {name}"
+                }
+            )
+            for m_code, title, semester in modules:
+                mod, _ = Module.objects.update_or_create(
+                    specialty=spec, code=m_code,
+                    defaults={"title": title, "semester": semester, "coefficient": 3}
+                )
+                # Ressource Drive approuvée
+                Resource.objects.create(
+                    module=mod, resource_type='DRIVE',
+                    title=f"Polycopié de cours 2024 - {m_code}",
+                    url="https://drive.google.com", category='COURS',
+                    status=Resource.StatusChoices.APPROVED, views_count=45
+                )
+                # Ressource YouTube approuvée
+                Resource.objects.create(
+                    module=mod, resource_type='YOUTUBE',
+                    title=f"Introduction vidéo complète : {title}",
+                    url="https://youtube.com", channel_name=f"Master {code} France",
+                    duration="48m", status=Resource.StatusChoices.APPROVED
+                )
+
+        # Ajout de propositions d'étudiants en attente pour tester le dashboard délégué
+        first_mod = Module.objects.first()
+        last_mod = Module.objects.last()
+        Resource.objects.create(
+            module=first_mod, resource_type='DRIVE',
+            title="Sujet d'examen avec corrigé détaillé Janvier 2024",
+            url="https://drive.google.com/open?id=demo_exam_corrigee",
+            category='EXAM', contributor_name="Yassine (M1)",
+            status=Resource.StatusChoices.PENDING
+        )
+        Resource.objects.create(
+            module=first_mod, resource_type='YOUTUBE',
+            title="Tutoriel complet : Installation Sandbox Pentest & Wireshark",
+            url="https://youtube.com/watch?v=demo_pentest",
+            channel_name="CyberHacker Académie", duration="32m",
+            contributor_name="Étudiant Anonyme",
+            status=Resource.StatusChoices.PENDING
+        )
+        Resource.objects.create(
+            module=last_mod, resource_type='DRIVE',
+            title="Fiche de révision synthèse pour les partiels",
+            url="https://drive.google.com/open?id=demo_fiche",
+            category='SUMMARY', contributor_name="Sarah (M1 RSD)",
+            status=Resource.StatusChoices.PENDING
+        )
+        # Création d'un compte Administrateur / Délégué par défaut si inexistant
+        from django.contrib.auth.models import User
+        from apps.core.models import DelegateProfile
+
+        admin_user, created = User.objects.get_or_create(
+            username="admin",
+            defaults={"email": "admin@masterinfo.univ.fr", "is_staff": True, "is_superuser": True}
+        )
+        if created:
+            admin_user.set_password("admin123")
+            admin_user.save()
+            DelegateProfile.objects.get_or_create(user=admin_user, is_active_delegate=True)
+            self.stdout.write(self.style.SUCCESS("Compte admin créé : admin / admin123"))
+
+        self.stdout.write(self.style.SUCCESS("Base de données réinitialisée avec ressources approuvées et en attente !"))
+
