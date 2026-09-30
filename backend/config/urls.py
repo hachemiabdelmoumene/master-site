@@ -6,6 +6,8 @@ urlpatterns = [
     # API endpoints v1
     path('api/v1/', include('apps.specialties.urls')),
     path('api/v1/', include('apps.resources.urls')),
-    # Direct alias for /api/delegate/
+    path('api/v1/', include('apps.users.urls')),
+    # Direct aliases for /api/
     path('api/', include('apps.resources.urls')),
+    path('api/', include('apps.users.urls')),
 ]

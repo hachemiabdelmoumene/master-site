@@ -1,8 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.conf import settings
+from rest_framework.permissions import IsAuthenticated
 from apps.core.permissions import IsDelegateOrAdmin
 from .models import Resource
 from .serializers import (
@@ -13,22 +12,20 @@ from .serializers import (
 
 class DelegateResourceViewSet(viewsets.ModelViewSet):
     """
-    ViewSet réservé aux Délégués et Administrateurs pour la modération
-    et l'ajout direct de ressources.
+    ViewSet sécurisé réservé aux Délégués et Administrateurs pour la modération
+    et l'ajout direct de ressources académiques.
     """
     serializer_class = DelegateResourceSerializer
-    # En développement, AllowAny facilite la démonstration sans configuration JWT préalable
-    permission_classes = [AllowAny] if settings.DEBUG else [IsAuthenticated, IsDelegateOrAdmin]
+    permission_classes = [IsAuthenticated, IsDelegateOrAdmin]
 
     def get_queryset(self):
         queryset = Resource.objects.all().select_related('module', 'module__specialty')
         user = self.request.user
 
-        # Filtrage par spécialité attribuée au délégué (si restreinte)
-        if user.is_authenticated and hasattr(user, 'delegate_profile'):
-            profile = user.delegate_profile
-            if profile.specialty:
-                queryset = queryset.filter(module__specialty=profile.specialty)
+        # Filtrage par spécialité assignée au délégué (si non admin)
+        if user.is_authenticated and not (user.is_staff or user.is_superuser):
+            if getattr(user, 'specialty', None):
+                queryset = queryset.filter(module__specialty=user.specialty)
 
         specialty_slug = self.request.query_params.get('specialty_slug')
         if specialty_slug:
@@ -67,6 +64,8 @@ class DelegateResourceViewSet(viewsets.ModelViewSet):
         reason = request.data.get('reason', '')
         resource.status = Resource.StatusChoices.REJECTED
         resource.rejection_reason = reason
+        if request.user.is_authenticated:
+            resource.validated_by = request.user
         resource.save()
         return Response(
             {'message': 'Ressource rejetée.', 'reason': reason, 'status': resource.status},
@@ -78,7 +77,16 @@ class DelegateResourceViewSet(viewsets.ModelViewSet):
         """POST /api/delegate/resources/create/"""
         serializer = DirectAddResourceSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            resource = serializer.save()
+            # Vérification si le délégué a une spécialité restreinte
+            user = request.user
+            if not (user.is_staff or user.is_superuser) and getattr(user, 'specialty', None):
+                module = serializer.validated_data.get('module')
+                if module and module.specialty != user.specialty:
+                    return Response(
+                        {'detail': f"Vous n'avez pas l'autorisation d'ajouter une ressource pour le Master {module.specialty.code}."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            resource = serializer.save(validated_by=request.user)
             return Response(
                 DelegateResourceSerializer(resource).data,
                 status=status.HTTP_201_CREATED
@@ -87,7 +95,7 @@ class DelegateResourceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='stats')
     def stats(self, request):
-        """Statistiques consolidées pour le Dashboard Délégué"""
+        """Statistiques consolidées (adaptées à la spécialité du délégué)"""
         qs = self.get_queryset()
         return Response({
             'pending_count': qs.filter(status=Resource.StatusChoices.PENDING).count(),

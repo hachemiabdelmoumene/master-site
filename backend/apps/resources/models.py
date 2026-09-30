@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from apps.core.models import TimeStampedModel
 from apps.specialties.models import Module
 
@@ -84,7 +84,7 @@ class Resource(TimeStampedModel):
         verbose_name="Vues / Téléchargements"
     )
     validated_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

@@ -70,17 +70,18 @@ class Command(BaseCommand):
                 )
 
         # Ajout de propositions d'étudiants en attente pour tester le dashboard délégué
-        first_mod = Module.objects.first()
-        last_mod = Module.objects.last()
+        crypto_mod = Module.objects.filter(code='CRYPTO').first() or Module.objects.first()
+        rsd_mod = Module.objects.filter(code='DISTRIB').first() or Module.objects.last()
+
         Resource.objects.create(
-            module=first_mod, resource_type='DRIVE',
+            module=crypto_mod, resource_type='DRIVE',
             title="Sujet d'examen avec corrigé détaillé Janvier 2024",
             url="https://drive.google.com/open?id=demo_exam_corrigee",
-            category='EXAM', contributor_name="Yassine (M1)",
+            category='EXAM', contributor_name="Yassine (M1 SSI)",
             status=Resource.StatusChoices.PENDING
         )
         Resource.objects.create(
-            module=first_mod, resource_type='YOUTUBE',
+            module=crypto_mod, resource_type='YOUTUBE',
             title="Tutoriel complet : Installation Sandbox Pentest & Wireshark",
             url="https://youtube.com/watch?v=demo_pentest",
             channel_name="CyberHacker Académie", duration="32m",
@@ -88,25 +89,81 @@ class Command(BaseCommand):
             status=Resource.StatusChoices.PENDING
         )
         Resource.objects.create(
-            module=last_mod, resource_type='DRIVE',
-            title="Fiche de révision synthèse pour les partiels",
+            module=rsd_mod, resource_type='DRIVE',
+            title="Fiche de révision synthèse pour les partiels Réseaux",
             url="https://drive.google.com/open?id=demo_fiche",
             category='SUMMARY', contributor_name="Sarah (M1 RSD)",
             status=Resource.StatusChoices.PENDING
         )
-        # Création d'un compte Administrateur / Délégué par défaut si inexistant
-        from django.contrib.auth.models import User
-        from apps.core.models import DelegateProfile
+        # Création des comptes Administrateur et Délégués par défaut
+        from django.contrib.auth import get_user_model
+        UserModel = get_user_model()
 
-        admin_user, created = User.objects.get_or_create(
+        # 1. Compte Administrateur Global (Tous les Masters)
+        admin_user, created = UserModel.objects.get_or_create(
             username="admin",
-            defaults={"email": "admin@masterinfo.univ.fr", "is_staff": True, "is_superuser": True}
+            defaults={
+                "email": "admin@masterinfo.univ.fr",
+                "is_staff": True,
+                "is_superuser": True,
+                "is_delegate": True,
+                "specialty": None,
+            }
         )
         if created:
             admin_user.set_password("admin123")
             admin_user.save()
-            DelegateProfile.objects.get_or_create(user=admin_user, is_active_delegate=True)
-            self.stdout.write(self.style.SUCCESS("Compte admin créé : admin / admin123"))
+            self.stdout.write(self.style.SUCCESS("Compte Admin global créé : admin / admin123"))
 
-        self.stdout.write(self.style.SUCCESS("Base de données réinitialisée avec ressources approuvées et en attente !"))
+        # 2. Compte Superutilisateur hache21 (si pas encore créé)
+        hache_user, created = UserModel.objects.get_or_create(
+            username="hache21",
+            defaults={
+                "email": "hac@gmail.com",
+                "is_staff": True,
+                "is_superuser": True,
+                "is_delegate": True,
+                "specialty": None,
+            }
+        )
+        if created:
+            hache_user.set_password("hache1234")
+            hache_user.save()
+
+        # 3. Compte Délégué SSI (Sécurité)
+        ssi_spec = Specialty.objects.filter(code="SSI").first()
+        del_ssi, created = UserModel.objects.get_or_create(
+            username="delegue_ssi",
+            defaults={
+                "email": "delegue.ssi@masterinfo.univ.fr",
+                "is_staff": False,
+                "is_superuser": False,
+                "is_delegate": True,
+                "specialty": ssi_spec,
+            }
+        )
+        if created:
+            del_ssi.set_password("ssi123")
+            del_ssi.save()
+            self.stdout.write(self.style.SUCCESS("Compte Délégué SSI créé : delegue_ssi / ssi123"))
+
+        # 4. Compte Délégué RSD (Réseaux)
+        rsd_spec = Specialty.objects.filter(code="RSD").first()
+        del_rsd, created = UserModel.objects.get_or_create(
+            username="delegue_rsd",
+            defaults={
+                "email": "delegue.rsd@masterinfo.univ.fr",
+                "is_staff": False,
+                "is_superuser": False,
+                "is_delegate": True,
+                "specialty": rsd_spec,
+            }
+        )
+        if created:
+            del_rsd.set_password("rsd123")
+            del_rsd.save()
+            self.stdout.write(self.style.SUCCESS("Compte Délégué RSD créé : delegue_rsd / rsd123"))
+
+        self.stdout.write(self.style.SUCCESS("Base de données réinitialisée avec utilisateurs, spécialités et ressources !"))
+
 

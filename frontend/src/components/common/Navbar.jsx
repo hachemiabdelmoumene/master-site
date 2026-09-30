@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Layers, Plus, ChevronDown, Sparkles, Menu, X, Home, ShieldCheck } from 'lucide-react';
+import { Layers, Plus, ChevronDown, Sparkles, Menu, X, Home, ShieldCheck, LogOut, UserCheck } from 'lucide-react';
 import { SPECIALTY_THEMES } from '../../theme/specialties';
+import { useAuth } from '../../context/AuthContext';
 
 export function Navbar({ currentSlug, onSelectSpecialty, onNavigate }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isDelegate, logout } = useAuth();
 
   const handleSelectMobile = (slug) => {
     onSelectSpecialty(slug);
@@ -14,6 +16,11 @@ export function Navbar({ currentSlug, onSelectSpecialty, onNavigate }) {
   const handleNavigateMobile = (page) => {
     onNavigate(page);
     setMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    onNavigate('home');
   };
 
   return (
@@ -77,16 +84,46 @@ export function Navbar({ currentSlug, onSelectSpecialty, onNavigate }) {
           )}
         </div>
 
-        {/* Right Actions & Burger Menu button */}
+        {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => onNavigate('delegate')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Délégué</span>
-          </button>
+          {/* Delegate Authentication & Button */}
+          {isAuthenticated && isDelegate ? (
+            <div className="hidden sm:flex items-center gap-2 bg-slate-900/90 border border-cyan-500/30 rounded-xl px-2.5 py-1 shadow-lg shadow-cyan-950/20">
+              <button
+                onClick={() => onNavigate('delegate_dashboard')}
+                className="flex items-center gap-1.5 text-xs text-slate-200 hover:text-cyan-400 transition"
+                title="Accéder au dashboard de modération"
+              >
+                <div className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-[10px]">
+                  {user.specialty_code || 'ALL'}
+                </div>
+                <span className="font-semibold text-white max-w-[100px] truncate">{user.username}</span>
+                {user.is_superuser && (
+                  <span className="text-[9px] uppercase px-1.5 py-0.2 bg-indigo-500/20 text-indigo-300 rounded font-mono">
+                    Admin
+                  </span>
+                )}
+              </button>
 
+              <button
+                onClick={handleLogout}
+                className="p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition"
+                title="Déconnexion"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => onNavigate('delegate_login')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-cyan-500/40 text-xs font-semibold text-slate-300 hover:text-white transition group"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span>Espace Délégué</span>
+            </button>
+          )}
+
+          {/* Proposer une ressource */}
           <button
             onClick={() => onNavigate('contribute')}
             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white shadow-lg shadow-cyan-600/20 active:scale-95 transition-all"
@@ -110,7 +147,7 @@ export function Navbar({ currentSlug, onSelectSpecialty, onNavigate }) {
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-800 bg-slate-950/95 backdrop-blur-xl px-4 py-4 space-y-4 animate-fade-in shadow-2xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <button
               onClick={() => handleNavigateMobile('home')}
               className="flex items-center gap-2 text-xs font-semibold text-cyan-400 hover:underline"
@@ -118,13 +155,36 @@ export function Navbar({ currentSlug, onSelectSpecialty, onNavigate }) {
               <Home className="w-4 h-4" />
               <span>Accueil</span>
             </button>
-            <button
-              onClick={() => handleNavigateMobile('delegate')}
-              className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:underline"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Espace Délégué</span>
-            </button>
+
+            {isAuthenticated && isDelegate ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleNavigateMobile('delegate_dashboard')}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  <span>{user.username} ({user.specialty_code || 'Tous'})</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-1 text-rose-400 hover:text-rose-300"
+                  title="Déconnexion"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleNavigateMobile('delegate_login')}
+                className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:underline"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Espace Délégué</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
