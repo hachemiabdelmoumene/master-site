@@ -98,7 +98,9 @@ class YouTubeResourceViewSet(viewsets.ReadOnlyModelViewSet):
 class ContributionViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     ViewSet public permettant aux étudiants de soumettre une ressource.
+    Protégé contre le spam d'envois via un limiteur de débit (ScopedRateThrottle).
     """
     queryset = Resource.objects.all()
     serializer_class = ContributionSerializer
     permission_classes = [AllowAny]
+    throttle_scope = 'contributions'

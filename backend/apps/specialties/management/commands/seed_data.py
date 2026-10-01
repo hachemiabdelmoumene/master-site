@@ -99,6 +99,12 @@ class Command(BaseCommand):
         from django.contrib.auth import get_user_model
         UserModel = get_user_model()
 
+        import os
+        admin_pwd = os.getenv('SEED_ADMIN_PASSWORD', 'admin123')
+        hache_pwd = os.getenv('SEED_HACHE_PASSWORD', 'hache1234')
+        ssi_pwd = os.getenv('SEED_SSI_PASSWORD', 'ssi123')
+        rsd_pwd = os.getenv('SEED_RSD_PASSWORD', 'rsd123')
+
         # 1. Compte Administrateur Global (Tous les Masters)
         admin_user, created = UserModel.objects.get_or_create(
             username="admin",
@@ -111,9 +117,9 @@ class Command(BaseCommand):
             }
         )
         if created:
-            admin_user.set_password("admin123")
+            admin_user.set_password(admin_pwd)
             admin_user.save()
-            self.stdout.write(self.style.SUCCESS("Compte Admin global créé : admin / admin123"))
+            self.stdout.write(self.style.SUCCESS(f"Compte Admin global créé : admin / {admin_pwd}"))
 
         # 2. Compte Superutilisateur hache21 (si pas encore créé)
         hache_user, created = UserModel.objects.get_or_create(
@@ -127,7 +133,7 @@ class Command(BaseCommand):
             }
         )
         if created:
-            hache_user.set_password("hache1234")
+            hache_user.set_password(hache_pwd)
             hache_user.save()
 
         # 3. Compte Délégué SSI (Sécurité)
@@ -143,9 +149,9 @@ class Command(BaseCommand):
             }
         )
         if created:
-            del_ssi.set_password("ssi123")
+            del_ssi.set_password(ssi_pwd)
             del_ssi.save()
-            self.stdout.write(self.style.SUCCESS("Compte Délégué SSI créé : delegue_ssi / ssi123"))
+            self.stdout.write(self.style.SUCCESS(f"Compte Délégué SSI créé : delegue_ssi / {ssi_pwd}"))
 
         # 4. Compte Délégué RSD (Réseaux)
         rsd_spec = Specialty.objects.filter(code="RSD").first()
@@ -160,9 +166,9 @@ class Command(BaseCommand):
             }
         )
         if created:
-            del_rsd.set_password("rsd123")
+            del_rsd.set_password(rsd_pwd)
             del_rsd.save()
-            self.stdout.write(self.style.SUCCESS("Compte Délégué RSD créé : delegue_rsd / rsd123"))
+            self.stdout.write(self.style.SUCCESS(f"Compte Délégué RSD créé : delegue_rsd / {rsd_pwd}"))
 
         self.stdout.write(self.style.SUCCESS("Base de données réinitialisée avec utilisateurs, spécialités et ressources !"))
 

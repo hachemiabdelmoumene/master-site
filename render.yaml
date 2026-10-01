@@ -1,0 +1,65 @@
+# Render Blueprint Specification (Infrastructure as Code)
+# Déploiement automatisé en 1 clic sur Render
+version: "1"
+
+services:
+  # =======================================================
+  # 1. API BACKEND (Django REST Framework + Gunicorn)
+  # =======================================================
+  - type: web
+    name: master-info-backend
+    runtime: python
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4"
+    healthCheckPath: /health/
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://master-info-frontend.onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://master-info-frontend.onrender.com"
+      - key: SEED_ON_BUILD
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: master-info-postgres
+          property: connectionString
+
+  # =======================================================
+  # 2. FRONTEND (React 18 + Vite + Tailwind CSS)
+  # =======================================================
+  - type: web
+    name: master-info-frontend
+    runtime: static
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "./dist"
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: "/index.html"
+    envVars:
+      - key: VITE_API_URL
+        value: "https://master-info-backend.onrender.com/api/v1"
+
+# =======================================================
+# 3. BASE DE DONNÉES GÉRÉE POSTGRESQL (Render Managed)
+# =======================================================
+databases:
+  - name: master-info-postgres
+    databaseName: master_info_db
+    user: master_user
+    plan: free
+    region: frankfurt

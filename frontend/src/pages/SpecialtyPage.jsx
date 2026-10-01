@@ -1,13 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { HardDrive, RotateCcw } from 'lucide-react';
+import { HardDrive, RotateCcw, Loader2 } from 'lucide-react';
 import { YoutubeIcon } from '../components/common/YoutubeIcon';
 import { SpecialtyHeader } from '../components/specialties/SpecialtyHeader';
 import { ResourceSearchFilter } from '../components/resources/ResourceSearchFilter';
 import { DriveLinkList } from '../components/resources/DriveLinkList';
 import { YouTubeCard } from '../components/resources/YouTubeCard';
 import { useResources } from '../hooks/useResources';
+import { useSpecialtyDetail } from '../hooks/useSpecialties';
 
-export function SpecialtyPage({ specialty, onBack }) {
+export function SpecialtyPage({ specialty: specialtyBasic, onBack }) {
+  // Charge les détails complets avec modules depuis l'API
+  const { specialty: specialtyFull, loading: loadingSpec } = useSpecialtyDetail(specialtyBasic?.slug);
+  const specialty = specialtyFull || specialtyBasic;
   const [activeTab, setActiveTab] = useState('drives'); // 'drives' | 'youtube'
 
   // Drives filter states

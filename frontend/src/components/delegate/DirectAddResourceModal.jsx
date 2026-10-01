@@ -11,7 +11,7 @@ const CATEGORIES = [
   { id: 'SUMMARY', label: 'Fiches & Résumés' },
 ];
 
-export function DirectAddResourceModal({ isOpen, onClose, onAddSuccess, modules = [] }) {
+export function DirectAddResourceModal({ isOpen, onClose, onSubmit, modules = [] }) {
   const [formData, setFormData] = useState({
     module: modules[0]?.id || 1,
     resource_type: 'DRIVE',
@@ -23,15 +23,22 @@ export function DirectAddResourceModal({ isOpen, onClose, onAddSuccess, modules 
     contributor_name: 'Délégué Promotion',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    await onAddSuccess(formData);
-    setSubmitting(false);
-    onClose();
+    setError('');
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (err) {
+      setError(err?.message || "Erreur lors de la publication de la ressource.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -48,6 +55,12 @@ export function DirectAddResourceModal({ isOpen, onClose, onAddSuccess, modules 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-slate-300 font-medium mb-1">Module concerné</label>
             <select

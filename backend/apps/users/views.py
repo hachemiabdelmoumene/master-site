@@ -10,8 +10,10 @@ class LoginView(TokenObtainPairView):
     POST /api/auth/login/
     Authentification JWT pour les Délégués et Administrateurs.
     Renvoie les tokens access, refresh et l'objet user complet.
+    Protégé contre les attaques par force brute via ScopedRateThrottle.
     """
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_scope = 'login'
 
 
 class RefreshTokenView(TokenRefreshView):

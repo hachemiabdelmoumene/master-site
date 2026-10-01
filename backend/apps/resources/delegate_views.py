@@ -60,8 +60,10 @@ class DelegateResourceViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='reject')
     def reject(self, request, pk=None):
         """PATCH /api/delegate/resources/{id}/reject/"""
+        from django.utils.html import strip_tags
         resource = self.get_object()
-        reason = request.data.get('reason', '')
+        raw_reason = request.data.get('reason', '')
+        reason = strip_tags(str(raw_reason))[:500].strip()
         resource.status = Resource.StatusChoices.REJECTED
         resource.rejection_reason = reason
         if request.user.is_authenticated:

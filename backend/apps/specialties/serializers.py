@@ -8,12 +8,16 @@ class ModuleSerializer(serializers.ModelSerializer):
     """
     drive_count = serializers.SerializerMethodField()
     youtube_count = serializers.SerializerMethodField()
+    specialty_code = serializers.CharField(source='specialty.code', read_only=True)
+    specialty_slug = serializers.CharField(source='specialty.slug', read_only=True)
+    specialty_name = serializers.CharField(source='specialty.name', read_only=True)
 
     class Meta:
         model = Module
         fields = [
             'id', 'code', 'title', 'semester',
             'coefficient', 'description',
+            'specialty_code', 'specialty_slug', 'specialty_name',
             'drive_count', 'youtube_count'
         ]
 
@@ -26,7 +30,8 @@ class ModuleSerializer(serializers.ModelSerializer):
 
 class SpecialtyListSerializer(serializers.ModelSerializer):
     """
-    Sérialiseur allégé pour la liste des 7 spécialités (Landing Page).
+    Sérialiseur allégé et ultra-rapide pour la liste des 7 spécialités (Landing Page).
+    Utilise les annotations SQL sans requêtes N+1.
     """
     modules_count = serializers.SerializerMethodField()
     total_resources = serializers.SerializerMethodField()
@@ -40,9 +45,13 @@ class SpecialtyListSerializer(serializers.ModelSerializer):
         ]
 
     def get_modules_count(self, obj):
+        if hasattr(obj, 'modules_count_annotated'):
+            return obj.modules_count_annotated
         return obj.modules.count()
 
     def get_total_resources(self, obj):
+        if hasattr(obj, 'resources_count_annotated'):
+            return obj.resources_count_annotated
         return sum(
             m.resources.filter(status='approved').count() for m in obj.modules.all()
         )
