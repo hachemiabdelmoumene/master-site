@@ -36,11 +36,11 @@ services:
 
   # =======================================================
   # 2. FRONTEND (React 18 + Vite + Tailwind CSS)
+  # Static Sites ne supportent pas le champ "region"
   # =======================================================
   - type: web
     name: master-info-frontend
     runtime: static
-    region: frankfurt
     plan: free
     branch: main
     rootDir: frontend
