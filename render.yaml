@@ -5,11 +5,13 @@ version: "1"
 services:
   # =======================================================
   # 1. API BACKEND (Django REST Framework + Gunicorn)
+  # Plan "free" : 750h/mois, mise en veille après 15min d'inactivité
   # =======================================================
   - type: web
     name: master-info-backend
     runtime: python
     region: frankfurt
+    plan: free
     branch: main
     rootDir: backend
     buildCommand: "./build.sh"
@@ -35,6 +37,7 @@ services:
 
   # =======================================================
   # 2. FRONTEND (React 18 + Vite + Tailwind CSS)
+  # Static Sites : le champ "plan" n'est pas supporté
   # =======================================================
   - type: web
     name: master-info-frontend
@@ -53,9 +56,11 @@ services:
 
 # =======================================================
 # 3. BASE DE DONNÉES GÉRÉE POSTGRESQL (Render Managed)
+# Plan gratuit : expire après 90 jours
 # =======================================================
 databases:
   - name: master-info-postgres
     databaseName: master_info_db
     user: master_user
+    plan: free
     region: frankfurt
