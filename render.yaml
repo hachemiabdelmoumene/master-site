@@ -10,7 +10,6 @@ services:
     name: master-info-backend
     runtime: python
     region: frankfurt
-    plan: free
     branch: main
     rootDir: backend
     buildCommand: "./build.sh"
@@ -36,12 +35,10 @@ services:
 
   # =======================================================
   # 2. FRONTEND (React 18 + Vite + Tailwind CSS)
-  # Static Sites ne supportent pas le champ "region"
   # =======================================================
   - type: web
     name: master-info-frontend
     runtime: static
-    plan: free
     branch: main
     rootDir: frontend
     buildCommand: "npm install && npm run build"
@@ -61,5 +58,4 @@ databases:
   - name: master-info-postgres
     databaseName: master_info_db
     user: master_user
-    plan: free
     region: frankfurt
