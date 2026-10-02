@@ -150,50 +150,6 @@ export function DelegateLoginPage({ onSuccess, onBack }) {
             </button>
           </form>
 
-          {/* Quick Login Helper Box */}
-          <div className="mt-6 pt-5 border-t border-slate-800 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-                Comptes de test rapide
-              </span>
-              <span className="text-[10px] text-cyan-400">1 clic pour remplir</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin', 'admin123')}
-                className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-cyan-500/40 text-left transition hover:bg-slate-950 group"
-              >
-                <div className="text-[11px] font-semibold text-slate-200 group-hover:text-cyan-400">
-                  Admin
-                </div>
-                <div className="text-[10px] text-slate-400 truncate">Tous Masters</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('delegue_ssi', 'ssi123')}
-                className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/40 text-left transition hover:bg-slate-950 group"
-              >
-                <div className="text-[11px] font-semibold text-emerald-400">
-                  Dél. SSI
-                </div>
-                <div className="text-[10px] text-slate-400 truncate">Sécurité</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('delegue_rsd', 'rsd123')}
-                className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-fuchsia-500/40 text-left transition hover:bg-slate-950 group"
-              >
-                <div className="text-[11px] font-semibold text-fuchsia-400">
-                  Dél. RSD
-                </div>
-                <div className="text-[10px] text-slate-400 truncate">Réseaux</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Info footer */}
