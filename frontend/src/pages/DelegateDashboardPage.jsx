@@ -10,31 +10,63 @@ import {
   LogOut, 
   RefreshCw, 
   User, 
-  GraduationCap 
+  GraduationCap,
+  BookPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { delegateService } from '../services/delegateService';
+import { specialtyService, FALLBACK_MODULES_BY_SPECIALTY } from '../services/specialtyService';
 import { PendingResourcesTable } from '../components/delegate/PendingResourcesTable';
 import { DirectAddResourceModal } from '../components/delegate/DirectAddResourceModal';
+import { AddModuleModal } from '../components/delegate/AddModuleModal';
 
-export function DelegateDashboardPage({ onBack, allModules = [] }) {
+export function DelegateDashboardPage({ onBack, allModules = [], onModuleCreated }) {
   const { user, logout, isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'published'
   const [pendingList, setPendingList] = useState([]);
   const [stats, setStats] = useState({ pending_count: 0, approved_count: 0, rejected_count: 0, total_resources: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Filter modules for direct addition: if user has a specific specialty, restrict to that specialty
-  const scopedModules = React.useMemo(() => {
-    if (isSuperAdmin || !user?.specialty_code) {
-      return allModules;
+  // État local des modules avec chargement auto
+  const [modulesList, setModulesList] = useState(allModules);
+
+  useEffect(() => {
+    if (allModules && allModules.length > 0) {
+      setModulesList(allModules);
+    } else {
+      specialtyService.getAllModules().then((mods) => {
+        if (mods && mods.length > 0) {
+          setModulesList(mods);
+        }
+      });
     }
-    return allModules.filter(
-      (m) => m.specialty_code === user.specialty_code || m.specialty === user.specialty
-    );
-  }, [allModules, user, isSuperAdmin]);
+  }, [allModules]);
+
+  // Filtrage des modules pour l'ajout direct selon la spécialité du délégué
+  const scopedModules = React.useMemo(() => {
+    if (isSuperAdmin && !user?.specialty_code) {
+      return modulesList;
+    }
+    const userCode = user?.specialty_code;
+    const userSlug = user?.specialty_slug;
+    const userSpecId = user?.specialty_id || user?.specialty;
+
+    let filtered = modulesList.filter((m) => {
+      if (userCode && m.specialty_code && m.specialty_code.toUpperCase() === userCode.toUpperCase()) return true;
+      if (userSlug && m.specialty_slug && m.specialty_slug.toLowerCase() === userSlug.toLowerCase()) return true;
+      if (userSpecId && (m.specialty === userSpecId || m.specialty_id === userSpecId)) return true;
+      return false;
+    });
+
+    // Secours si l'API n'a pas encore de modules pour ce master
+    if (filtered.length === 0 && userCode && FALLBACK_MODULES_BY_SPECIALTY[userCode]) {
+      filtered = FALLBACK_MODULES_BY_SPECIALTY[userCode];
+    }
+    return filtered.length > 0 ? filtered : modulesList;
+  }, [modulesList, user, isSuperAdmin]);
 
   const loadData = async () => {
     setLoading(true);
@@ -107,6 +139,32 @@ export function DelegateDashboardPage({ onBack, allModules = [] }) {
     }
   };
 
+  const handleCreateModule = async (modData) => {
+    try {
+      const payload = {
+        code: modData.code.trim().toUpperCase(),
+        title: modData.title.trim(),
+        semester: modData.semester || 'S1',
+        coefficient: Number(modData.coefficient) || 3,
+        specialty: user?.specialty_id || user?.specialty || null,
+      };
+      const created = await specialtyService.createModule(payload);
+      const newMod = {
+        ...created,
+        specialty_code: created.specialty_code || user?.specialty_code,
+        specialty_slug: created.specialty_slug || user?.specialty_slug,
+        specialty_name: created.specialty_name || user?.specialty_name,
+      };
+      setModulesList((prev) => [newMod, ...prev]);
+      onModuleCreated?.(newMod);
+      showNotification(`Module [${newMod.code}] créé avec succès !`);
+      return newMod;
+    } catch (err) {
+      console.error("Erreur création module:", err);
+      throw err;
+    }
+  };
+
   const handleLogout = () => {
     logout();
     onBack();
@@ -171,6 +229,15 @@ export function DelegateDashboardPage({ onBack, allModules = [] }) {
             title="Rafraîchir les données"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
+          </button>
+
+          <button
+            onClick={() => setIsModuleModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold transition active:scale-95 shadow-sm"
+            title="Créer un module pour votre spécialité"
+          >
+            <BookPlus className="w-4 h-4 text-indigo-400" />
+            <span className="hidden sm:inline">Nouveau module</span>
           </button>
 
           <button
@@ -277,6 +344,17 @@ export function DelegateDashboardPage({ onBack, allModules = [] }) {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleDirectAdd}
           modules={scopedModules}
+          onAddModule={handleCreateModule}
+          defaultSpecialtyCode={user?.specialty_code}
+        />
+      )}
+
+      {/* Add Module Modal */}
+      {isModuleModalOpen && (
+        <AddModuleModal
+          isOpen={isModuleModalOpen}
+          onClose={() => setIsModuleModalOpen(false)}
+          onSave={handleCreateModule}
           defaultSpecialtyCode={user?.specialty_code}
         />
       )}

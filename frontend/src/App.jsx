@@ -9,6 +9,7 @@ import { DelegateDashboardPage } from './pages/DelegateDashboardPage';
 import { DelegateLoginPage } from './pages/DelegateLoginPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useSpecialties } from './hooks/useSpecialties';
+import { specialtyService } from './services/specialtyService';
 
 function MainApp({ onReady }) {
   const { specialties, loading: specialtiesLoading } = useSpecialties();
@@ -66,12 +67,20 @@ function MainApp({ onReady }) {
 
   const currentSpecialty = specialties.find((s) => s.slug === selectedSlug) || specialties[0];
 
-  // Collect all modules from all specialties for delegate forms
-  const allModules = useMemo(() => {
-    return specialties.flatMap((s) =>
-      (s.modules || []).map((m) => ({ ...m, specialty_code: s.code, specialty_name: s.name }))
-    );
-  }, [specialties]);
+  // Chargement dynamique de tous les modules pour le dashboard délégué et formulaires
+  const [allModules, setAllModules] = useState([]);
+
+  useEffect(() => {
+    specialtyService.getAllModules().then((mods) => {
+      if (Array.isArray(mods) && mods.length > 0) {
+        setAllModules(mods);
+      }
+    });
+  }, []);
+
+  const handleModuleCreated = (newMod) => {
+    setAllModules((prev) => [newMod, ...prev]);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0B0F19] text-slate-100 selection:bg-cyan-500 selection:text-black">
@@ -113,6 +122,7 @@ function MainApp({ onReady }) {
             <DelegateDashboardPage
               onBack={() => handleNavigate('home')}
               allModules={allModules}
+              onModuleCreated={handleModuleCreated}
             />
           </ProtectedRoute>
         )}

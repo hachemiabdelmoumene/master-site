@@ -8,6 +8,11 @@ class ModuleSerializer(serializers.ModelSerializer):
     """
     drive_count = serializers.SerializerMethodField()
     youtube_count = serializers.SerializerMethodField()
+    specialty = serializers.PrimaryKeyRelatedField(
+        queryset=Specialty.objects.all(),
+        required=False,
+        allow_null=True
+    )
     specialty_code = serializers.CharField(source='specialty.code', read_only=True)
     specialty_slug = serializers.CharField(source='specialty.slug', read_only=True)
     specialty_name = serializers.CharField(source='specialty.name', read_only=True)
@@ -17,7 +22,7 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'code', 'title', 'semester',
             'coefficient', 'description',
-            'specialty_code', 'specialty_slug', 'specialty_name',
+            'specialty', 'specialty_code', 'specialty_slug', 'specialty_name',
             'drive_count', 'youtube_count'
         ]
 
