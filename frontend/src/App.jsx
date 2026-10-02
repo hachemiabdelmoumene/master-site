@@ -10,11 +10,18 @@ import { DelegateLoginPage } from './pages/DelegateLoginPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useSpecialties } from './hooks/useSpecialties';
 
-function MainApp() {
-  const { specialties } = useSpecialties();
+function MainApp({ onReady }) {
+  const { specialties, loading: specialtiesLoading } = useSpecialties();
   const { isAuthenticated, isDelegate } = useAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedSlug, setSelectedSlug] = useState(null);
+
+  // Remove the HTML loader once specialties have loaded
+  useEffect(() => {
+    if (!specialtiesLoading && onReady) {
+      onReady();
+    }
+  }, [specialtiesLoading, onReady]);
 
   // Synchronize route on initial load and popstate
   useEffect(() => {
@@ -116,10 +123,10 @@ function MainApp() {
   );
 }
 
-export function App() {
+export function App({ onReady }) {
   return (
     <AuthProvider>
-      <MainApp />
+      <MainApp onReady={onReady} />
     </AuthProvider>
   );
 }
