@@ -1,7 +1,7 @@
 import { request } from './api';
 
 const FALLBACK_DRIVES = [
-  { id: 1, title: 'Polycopié de Cours Magistral 2024', category: 'COURS', drive_url: 'https://drive.google.com', views_count: 142, module_code: 'CRYPTO', semester: 'S1' },
+  { id: 1, title: 'Polycopié de Cours Magistral 2026-2027', category: 'COURS', drive_url: 'https://drive.google.com', views_count: 142, module_code: 'CRYPTO', semester: 'S1' },
   { id: 2, title: 'Recueil des TD & Corrigés Types', category: 'TD', drive_url: 'https://drive.google.com', views_count: 98, module_code: 'SECNET', semester: 'S1' },
   { id: 3, title: 'Sujets Examens & Rattrapages (2020-2023)', category: 'EXAM', drive_url: 'https://drive.google.com', views_count: 215, module_code: 'CRYPTO', semester: 'S1' },
   { id: 4, title: 'Fiche Synthèse Protocoles & Normes', category: 'SUMMARY', drive_url: 'https://drive.google.com', views_count: 76, module_code: 'MALWARE', semester: 'S2' },

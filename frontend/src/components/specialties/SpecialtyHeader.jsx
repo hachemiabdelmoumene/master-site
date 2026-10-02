@@ -56,7 +56,7 @@ export function SpecialtyHeader({ specialty, onBack }) {
                 >
                   MASTER {specialty.code}
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">Promo 2024-2025</span>
+                <span className="text-[11px] text-slate-400 font-mono">2026-2027</span>
               </div>
               <h1 className="text-xl sm:text-3xl font-extrabold text-white mt-1.5 leading-tight">
                 {specialty.name}

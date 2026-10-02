@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 # Ressource Drive approuvée
                 Resource.objects.create(
                     module=mod, resource_type='DRIVE',
-                    title=f"Polycopié de cours 2024 - {m_code}",
+                    title=f"Polycopié de cours 2026-2027 - {m_code}",
                     url="https://drive.google.com", category='COURS',
                     status=Resource.StatusChoices.APPROVED, views_count=45
                 )
@@ -85,7 +85,7 @@ class Command(BaseCommand):
 
         Resource.objects.create(
             module=crypto_mod, resource_type='DRIVE',
-            title="Sujet d'examen avec corrigé détaillé Janvier 2024",
+            title="Sujet d'examen avec corrigé détaillé Janvier 2027",
             url="https://drive.google.com/open?id=demo_exam_corrigee",
             category='EXAM', contributor_name="Yassine (M1 SSI)",
             status=Resource.StatusChoices.PENDING
