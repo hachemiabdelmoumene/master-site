@@ -7,6 +7,7 @@ import { DriveLinkList } from '../components/resources/DriveLinkList';
 import { YouTubeCard } from '../components/resources/YouTubeCard';
 import { useResources } from '../hooks/useResources';
 import { useSpecialtyDetail } from '../hooks/useSpecialties';
+import { FALLBACK_MODULES_BY_SPECIALTY } from '../services/specialtyService';
 
 export function SpecialtyPage({ specialty: specialtyBasic, onBack }) {
   // Charge les détails complets avec modules depuis l'API
@@ -28,7 +29,11 @@ export function SpecialtyPage({ specialty: specialtyBasic, onBack }) {
     specialtySlug: specialty.slug,
   });
 
-  const modules = specialty.modules || [];
+  const specCode = (specialty.code || specialty.slug || '').toUpperCase();
+  const modules = (specialty.modules && specialty.modules.length > 0)
+    ? specialty.modules
+    : (FALLBACK_MODULES_BY_SPECIALTY[specCode] || []);
+
 
   const filteredDrives = useMemo(() => {
     return rawDrives.filter((d) => {

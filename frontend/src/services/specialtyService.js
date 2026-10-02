@@ -107,7 +107,14 @@ export const specialtyService = {
     try {
       const data = await request('/modules/?limit=200');
       const list = data.results || data;
-      if (Array.isArray(list) && list.length > 0) return list;
+      if (Array.isArray(list) && list.length > 0) {
+        // Combiner les modules de la BDD avec les modules de secours pour les spécialités non encore en BDD
+        const dbCodes = new Set(list.map((m) => `${(m.specialty_code || '').toUpperCase()}_${(m.code || '').toUpperCase()}`));
+        const missingFallbacks = ALL_FALLBACK_MODULES.filter(
+          (m) => !dbCodes.has(`${(m.specialty_code || '').toUpperCase()}_${(m.code || '').toUpperCase()}`)
+        );
+        return [...list, ...missingFallbacks];
+      }
     } catch {
       // ignore — fallback below
     }
@@ -132,16 +139,24 @@ export const specialtyService = {
   },
 
   async getSpecialtyBySlug(slug) {
+    const slugUpper = (slug || '').toUpperCase();
     try {
-      return await request(`/specialties/${slug}/`);
+      const data = await request(`/specialties/${slug}/`);
+      if (data) {
+        const specCode = (data.code || slugUpper).toUpperCase();
+        if (!data.modules || data.modules.length === 0) {
+          data.modules = FALLBACK_MODULES_BY_SPECIALTY[specCode] || [];
+        }
+        return data;
+      }
     } catch {
-      const base = FALLBACK_SPECIALTIES.find((s) => s.slug === slug) || FALLBACK_SPECIALTIES[0];
-      const fallbackModules =
-        FALLBACK_MODULES_BY_SPECIALTY[base.code] || [
-          { id: 101, code: `${base.code}-101`, title: 'Fondements Théoriques & Algorithmes', semester: 'S1', coefficient: 4, drive_count: 2, youtube_count: 2 },
-          { id: 102, code: `${base.code}-102`, title: 'Architectures Avancées & Systèmes',   semester: 'S1', coefficient: 3, drive_count: 2, youtube_count: 2 },
-        ];
-      return { ...base, modules: fallbackModules };
+      // ignore — fallback below
     }
+    const base = FALLBACK_SPECIALTIES.find((s) => s.slug === slug) || FALLBACK_SPECIALTIES[0];
+    const fallbackModules =
+      FALLBACK_MODULES_BY_SPECIALTY[base.code] ||
+      FALLBACK_MODULES_BY_SPECIALTY[slugUpper] || [];
+    return { ...base, modules: fallbackModules };
   },
 };
+

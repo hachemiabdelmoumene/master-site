@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Send, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react';
 import { resourceService } from '../services/resourceService';
-import { specialtyService, FALLBACK_SPECIALTIES } from '../services/specialtyService';
+import { specialtyService, FALLBACK_SPECIALTIES, FALLBACK_MODULES_BY_SPECIALTY, ALL_FALLBACK_MODULES } from '../services/specialtyService';
 
 
 export function ContributePage({ onBack }) {
@@ -30,20 +30,27 @@ export function ContributePage({ onBack }) {
   useEffect(() => {
     specialtyService.getAllModules()
       .then(mods => setAllModules(mods))
-      .catch(() => setAllModules([]));
+      .catch(() => setAllModules(ALL_FALLBACK_MODULES));
   }, []);
 
   // Filtrage des modules par spécialité sélectionnée
   const filteredModules = useMemo(() => {
-    if (!selectedSpecialtySlug || !allModules.length) return allModules;
+    if (!selectedSpecialtySlug) return allModules.length ? allModules : ALL_FALLBACK_MODULES;
     const spec = specialties.find(s => s.slug === selectedSpecialtySlug);
-    if (!spec) return allModules;
-    return allModules.filter(m => {
-      if (m.specialty_slug) return m.specialty_slug === selectedSpecialtySlug;
-      if (m.specialty_code) return m.specialty_code === spec.code;
-      return true;
+    const specCode = (spec?.code || selectedSpecialtySlug).toUpperCase();
+
+    let filtered = allModules.filter(m => {
+      if (m.specialty_slug && m.specialty_slug.toLowerCase() === selectedSpecialtySlug.toLowerCase()) return true;
+      if (m.specialty_code && m.specialty_code.toUpperCase() === specCode) return true;
+      return false;
     });
+
+    if (filtered.length === 0 && FALLBACK_MODULES_BY_SPECIALTY[specCode]) {
+      filtered = FALLBACK_MODULES_BY_SPECIALTY[specCode];
+    }
+    return filtered;
   }, [allModules, selectedSpecialtySlug, specialties]);
+
 
   // Pré-sélection du premier module quand les modules filtres changent
   useEffect(() => {
