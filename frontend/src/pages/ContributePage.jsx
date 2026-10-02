@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Send, CheckCircle2, ArrowLeft, Plus, AlertCircle } from 'lucide-react';
 import { resourceService } from '../services/resourceService';
 import { specialtyService, FALLBACK_SPECIALTIES } from '../services/specialtyService';
-import { request } from '../services/api';
+
 
 export function ContributePage({ onBack }) {
   const [specialties, setSpecialties] = useState([]);
@@ -26,13 +26,10 @@ export function ContributePage({ onBack }) {
       .catch(() => setSpecialties(FALLBACK_SPECIALTIES));
   }, []);
 
-  // Chargement de tous les modules depuis l'API
+  // Chargement de tous les modules depuis l'API (avec fallback si backend en veille)
   useEffect(() => {
-    request('/modules/?limit=200')
-      .then(data => {
-        const mods = data.results || data;
-        setAllModules(mods);
-      })
+    specialtyService.getAllModules()
+      .then(mods => setAllModules(mods))
       .catch(() => setAllModules([]));
   }, []);
 
