@@ -28,7 +28,7 @@ export function HomePage({ specialties, onSelectSpecialty, onNavigate }) {
       <section className="relative text-center max-w-4xl mx-auto px-4 pt-6 pb-2">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-6 animate-pulse">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Plateforme Ouverte • 7 Masters Informatique</span>
+          <span>Plateforme Ouverte • {specialties.length || 8} Masters Informatique</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
@@ -52,14 +52,14 @@ export function HomePage({ specialties, onSelectSpecialty, onNavigate }) {
         </div>
       </section>
 
-      {/* 7 Specialties Interactive Grid */}
+      {/* Specialties Interactive Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <span>Spécialités de Master</span>
               <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-cyan-400 border border-slate-700">
-                {filteredSpecialties.length} / 7
+                {filteredSpecialties.length} / {specialties.length || 8}
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-1">Sélectionnez votre cursus pour accéder aux modules et drives</p>
