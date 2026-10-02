@@ -12,7 +12,7 @@ const FALLBACK_YOUTUBE = [
   { id: 1, title: 'Comprendre RSA et les Courbes Elliptiques', youtube_url: 'https://youtube.com', channel_name: 'CyberDef France', duration: '45m', module_code: 'CRYPTO' },
   { id: 2, title: 'Analyse Dynamique de Malware sous Sandbox', youtube_url: 'https://youtube.com', channel_name: 'RootMe Academy', duration: '1h 12m', module_code: 'MALWARE' },
   { id: 3, title: 'Architecture des Réseaux SDN & OpenFlow', youtube_url: 'https://youtube.com', channel_name: 'TechNetwork Hub', duration: '35m', module_code: 'SECNET' },
-  { id: 4, title: 'Masterclass Deep Learning & Attention Transformers', youtube_url: 'https://youtube.com', channel_name: 'AI Insights', duration: '58m', module_code: 'ML_ADV' },
+  { id: 4, title: 'Masterclass Algorithmique Avancée & Complexité', youtube_url: 'https://youtube.com', channel_name: 'AI Insights', duration: '58m', module_code: 'SII11-ALG' },
 ];
 
 export const resourceService = {

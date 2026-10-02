@@ -14,8 +14,13 @@ class Command(BaseCommand):
                 ("MALWARE", "Analyse de Malwares & Rétro-ingénierie", "S2"),
             ]),
             ("SII", "Systèmes d'Information Intelligents", "sii", "#8b5cf6", "BrainCircuit", [
-                ("ML_ADV", "Apprentissage Automatique Avancé", "S1"),
-                ("NLP", "Traitement Automatique du Langage Naturel", "S2"),
+                ("SII11-ALG", "Algorithmique Avancée et Complexité", "S1", 4),
+                ("SII11-RDP", "Résolution de Problèmes", "S1", 4),
+                ("SII12-COMP", "Compilation : Génération du Code et Optimisation", "S1", 4),
+                ("SII12-SE", "Systèmes d'Exploitation", "S1", 4),
+                ("SII13-MEPS", "Modélisation et Évaluation des Performances des Systèmes", "S1", 3),
+                ("SII13-AAR", "Architecture et Administration des Réseaux", "S1", 3),
+                ("SII14-ANG", "Anglais", "S1", 2),
             ]),
             ("IL", "Ingénierie du Logiciel", "il", "#f59e0b", "Code2", [
                 ("ARCHI", "Architectures Logicielles et Design Patterns", "S1"),
@@ -49,10 +54,15 @@ class Command(BaseCommand):
                     "icon_name": icon, "order": idx, "description": f"Master {name}"
                 }
             )
-            for m_code, title, semester in modules:
+            for mod_data in modules:
+                if len(mod_data) == 4:
+                    m_code, title, semester, coeff = mod_data
+                else:
+                    m_code, title, semester = mod_data
+                    coeff = 3
                 mod, _ = Module.objects.update_or_create(
                     specialty=spec, code=m_code,
-                    defaults={"title": title, "semester": semester, "coefficient": 3}
+                    defaults={"title": title, "semester": semester, "coefficient": coeff}
                 )
                 # Ressource Drive approuvée
                 Resource.objects.create(
