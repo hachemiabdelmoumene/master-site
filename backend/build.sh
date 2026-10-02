@@ -18,4 +18,11 @@ if [ "$SEED_ON_BUILD" = "true" ]; then
     python manage.py seed_data
 fi
 
+echo "👤 [5/5] Création du superuser admin (si configuré)..."
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    python manage.py createsuperuser --no-input || echo "⚠️ Superuser existe déjà, ignoré."
+else
+    echo "ℹ️ Variables DJANGO_SUPERUSER_* non définies, superuser ignoré."
+fi
+
 echo "✅ Build terminé avec succès ! Prêt pour le démarrage."
